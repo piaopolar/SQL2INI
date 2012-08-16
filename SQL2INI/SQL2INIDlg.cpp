@@ -210,7 +210,7 @@ void CSQL2INIDlg::OnBnClickedBtnConnect()
 	int nPort = 3306;
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	sscanf(GetEdtStr(m_edtPort), "%d", &nPort);
+	sscanf_s(GetEdtStr(m_edtPort), "%d", &nPort);
 	if (!CSQLIniCheckMgr::GetInstance().Connect(cstrAddr, cstrUser, cstrPsw, cstrDB, nPort)) {
 		return;
 	}

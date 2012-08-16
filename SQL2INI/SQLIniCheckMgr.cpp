@@ -35,9 +35,9 @@ std::string GetTransPart(char *pszLine)
 
 	strPart = strPart.substr(sizePos);
 
-	//~~~~~~
-	int i = 0;
-	//~~~~~~
+	//~~~~~~~~~~~
+	unsigned i = 0;
+	//~~~~~~~~~~~
 
 	for (i = 1; i < strPart.length(); ++i) {
 		if (strPart[i] < '0' || strPart[i] > '9') {
@@ -68,7 +68,7 @@ SECTION_INFO GetSectionInfo(char *pszLine)
 		ReplaceStdString(infoRet.strFormat, "]", "");
 		ReplaceStdString(infoRet.strFormat, strTransPart, "%s");
 		MyTrim(infoRet.strFormat);
-		sscanf(strTransPart.c_str() + 1, "%d", &infoRet.nIndex);
+		sscanf_s(strTransPart.c_str() + 1, "%d", &infoRet.nIndex);
 	}
 
 	return infoRet;
@@ -109,7 +109,7 @@ VALUE_INFO GetValueInfo(char *pszLine)
 	if (!strTransPart.empty()) {
 		ReplaceStdString(infoRet.strValueFormat, strTransPart, "%s");
 		MyTrim(infoRet.strValueFormat);
-		sscanf(strTransPart.c_str() + 1, "%d", &infoRet.nValueIndex);
+		sscanf_s(strTransPart.c_str() + 1, "%d", &infoRet.nValueIndex);
 	}
 
 	return infoRet;
@@ -126,7 +126,7 @@ void Rewrite(const SECTION_INFO &rInfoSection,
 	char szSection[MAX_STRING];
 	//~~~~~~~~~~~~~~~~~~~~~~~
 
-	_snprintf(szSection, sizeof(szSection), rInfoSection.strFormat.c_str(), rSQLRow.at(rInfoSection.nIndex - 1).c_str());
+	_snprintf_s(szSection, sizeof(szSection), rInfoSection.strFormat.c_str(), rSQLRow.at(rInfoSection.nIndex - 1).c_str());
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	const char *pszIniValue = CIniMgr::GetInstance().GetValue(pszFile, szSection, rInfoValue.strKey.c_str(), "");
@@ -140,9 +140,16 @@ void Rewrite(const SECTION_INFO &rInfoSection,
 	char szRuleValue[MAX_STRING];
 	//~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	_snprintf(szRuleValue, sizeof(szRuleValue), rInfoValue.strValueFormat.c_str(),
-			  rSQLRow.at(rInfoValue.nValueIndex - 1).c_str());
+	_snprintf_s(szRuleValue, sizeof(szRuleValue), rInfoValue.strValueFormat.c_str(),
+				rSQLRow.at(rInfoValue.nValueIndex - 1).c_str());
 	if (ValueStrCmp(pszIniValue, szRuleValue)) {
+
+		//~~~~~~~~~~~
+		int nValue = 0;
+		//~~~~~~~~~~~
+
+		sscanf_s(szRuleValue, "%d", &nValue);
+		_snprintf_s(szRuleValue, sizeof(szRuleValue), "%d", nValue);
 		if (!WritePrivateProfileString(szSection, rInfoValue.strKey.c_str(), szRuleValue, pszFile)) {
 			LogInfoIn("–¥»Î %s  ß∞‹", pszFile);
 		}
@@ -166,11 +173,12 @@ CSQLIniCheckMgr::~CSQLIniCheckMgr(void)
 // ==============================================================================
 void CSQLIniCheckMgr::Fix(const char *pszRuleFile)
 {
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	//~~~~~~~~~~~~~~~~~~~~
 	char szLine[MAX_STRING];
-	FILE *pFileRule = fopen(pszRuleFile, "r");
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	FILE *pFileRule = NULL;
+	//~~~~~~~~~~~~~~~~~~~~
 
+	fopen_s(&pFileRule, pszRuleFile, "r");
 	if (NULL == pFileRule) {
 		return;
 	}
@@ -202,6 +210,8 @@ void CSQLIniCheckMgr::Fix(const char *pszRuleFile)
 		default:
 			break;
 		}
+
+		MyTrim(szLine);
 
 		if (strstr(szLine, pszFile) == szLine) {
 			stackFile.push(szLine + strlen(pszField));
@@ -235,6 +245,8 @@ void CSQLIniCheckMgr::Fix(const char *pszRuleFile)
 			}
 		}
 	}
+
+	fclose(pFileRule);
 }
 
 // ============================================================================

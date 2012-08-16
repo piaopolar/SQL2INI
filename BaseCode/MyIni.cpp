@@ -60,6 +60,8 @@ bool CMyIni::Open(const char *pszFileName)
 			break;
 		}
 
+		MyTrim(szLine);
+
 		if (cFirst == '[') {
 
 			//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -92,6 +94,7 @@ bool CMyIni::Open(const char *pszFileName)
 	}
 
 	fclose(pFile);
+	return true;
 }
 
 // ============================================================================

@@ -43,8 +43,8 @@ std::string CMySQLMgr::GetValue(const char *pszQueryField,
 	char szQueryCmd[MAX_STRING];
 	//~~~~~~~~~~~~~~~~~~~~~~~~
 
-	_snprintf(szQueryCmd, sizeof(szQueryCmd), "select %s from %s where %s = %s", pszQueryField, pszTable, pszKeyField,
-			  pszKeyValue);
+	_snprintf_s(szQueryCmd, sizeof(szQueryCmd), "select %s from %s where %s = %s", pszQueryField, pszTable, pszKeyField,
+				pszKeyValue);
 
 	//~~~~~~~~~~~
 	MYSQL_RES *res;
@@ -66,7 +66,7 @@ std::string CMySQLMgr::GetValue(const char *pszQueryField,
 	//~~~~~~~~~~~~~~~
 
 	while ((row = mysql_fetch_row(res))) {
-		for (int i = 0; i < mysql_num_fields(res); i++) {
+		for (unsigned i = 0; i < mysql_num_fields(res); i++) {
 			strRet = row[i];
 			MyTrim(strRet);
 		}
@@ -85,7 +85,7 @@ std::vector<std::vector<std::string> > CMySQLMgr::QueryFields(const char *pszQue
 	char szQueryCmd[MAX_STRING];
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	_snprintf(szQueryCmd, sizeof(szQueryCmd), "select %s from %s", pszQueryFields, pszTable);
+	_snprintf_s(szQueryCmd, sizeof(szQueryCmd), "select %s from %s", pszQueryFields, pszTable);
 
 	//~~~~~~~~~~~
 	MYSQL_RES *res;
@@ -108,8 +108,12 @@ std::vector<std::vector<std::string> > CMySQLMgr::QueryFields(const char *pszQue
 		std::vector<std::string> vecRow;
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		for (int i = 0; i < mysql_num_fields(res); i++) {
+		for (unsigned i = 0; i < mysql_num_fields(res); i++) {
+
+			//~~~~~~~~~~~~~~~~~~~~~~~~
 			std::string strRow = row[i];
+			//~~~~~~~~~~~~~~~~~~~~~~~~
+
 			MyTrim(strRow);
 			vecRow.push_back(strRow);
 		}
