@@ -1,0 +1,39 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SQL2INI", "SQL2INI\SQL2INI.vcxproj", "{7A46C9B1-5803-4EAE-8419-AD0B3454BC16}"
+	ProjectSection(ProjectDependencies) = postProject
+		{45591416-1250-41E9-A33C-1BBF0526D190} = {45591416-1250-41E9-A33C-1BBF0526D190}
+		{122E66DA-E3D1-49A7-BEC2-7F692006D1F4} = {122E66DA-E3D1-49A7-BEC2-7F692006D1F4}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BaseCode", "BaseCode\BaseCode.vcxproj", "{122E66DA-E3D1-49A7-BEC2-7F692006D1F4}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Data", "Data\Data.vcxproj", "{45591416-1250-41E9-A33C-1BBF0526D190}"
+	ProjectSection(ProjectDependencies) = postProject
+		{122E66DA-E3D1-49A7-BEC2-7F692006D1F4} = {122E66DA-E3D1-49A7-BEC2-7F692006D1F4}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7A46C9B1-5803-4EAE-8419-AD0B3454BC16}.Debug|Win32.ActiveCfg = Debug|Win32
+		{7A46C9B1-5803-4EAE-8419-AD0B3454BC16}.Debug|Win32.Build.0 = Debug|Win32
+		{7A46C9B1-5803-4EAE-8419-AD0B3454BC16}.Release|Win32.ActiveCfg = Release|Win32
+		{7A46C9B1-5803-4EAE-8419-AD0B3454BC16}.Release|Win32.Build.0 = Release|Win32
+		{122E66DA-E3D1-49A7-BEC2-7F692006D1F4}.Debug|Win32.ActiveCfg = Debug|Win32
+		{122E66DA-E3D1-49A7-BEC2-7F692006D1F4}.Debug|Win32.Build.0 = Debug|Win32
+		{122E66DA-E3D1-49A7-BEC2-7F692006D1F4}.Release|Win32.ActiveCfg = Release|Win32
+		{122E66DA-E3D1-49A7-BEC2-7F692006D1F4}.Release|Win32.Build.0 = Release|Win32
+		{45591416-1250-41E9-A33C-1BBF0526D190}.Debug|Win32.ActiveCfg = Debug|Win32
+		{45591416-1250-41E9-A33C-1BBF0526D190}.Debug|Win32.Build.0 = Debug|Win32
+		{45591416-1250-41E9-A33C-1BBF0526D190}.Release|Win32.ActiveCfg = Release|Win32
+		{45591416-1250-41E9-A33C-1BBF0526D190}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

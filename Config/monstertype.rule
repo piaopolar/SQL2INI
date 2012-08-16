@@ -1,0 +1,10 @@
+$FILE Monster.ini
+$TABLE cq_monstertype
+
+
+$FIELD name, size_add, life, level, stc_type
+[$1]
+SizeAdd=$2
+MaxLife=$3
+Level=$4
+StcType=$5
