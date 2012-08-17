@@ -278,7 +278,7 @@ int CSQLIniCheckMgr::Fix(const char *pszRuleFile)
 	if (nCount) {
 		LogInfoIn("	%s done with rewrite %d value(s) of %s", pszRuleFile, nCount, strFileList.c_str());
 	} else {
-		LogInfoIn("	%s done with no change");
+		LogInfoIn("	%s done with no change", pszRuleFile);
 	}
 
 	return nCount;
