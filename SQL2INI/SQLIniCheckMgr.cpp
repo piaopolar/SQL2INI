@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 
+#include <map>
 #include <stack>
 #include <string>
 #include "../BaseCode/BaseFunc.h"
@@ -117,7 +118,7 @@ VALUE_INFO GetValueInfo(char *pszLine)
 
 // ============================================================================
 // ==============================================================================
-void Rewrite(const SECTION_INFO &rInfoSection,
+bool Rewrite(const SECTION_INFO &rInfoSection,
 			 const VALUE_INFO &rInfoValue,
 			 const std::vector<std::string> &rSQLRow,
 			 const char *pszFile)
@@ -133,7 +134,7 @@ void Rewrite(const SECTION_INFO &rInfoSection,
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	if (pszIniValue[0] == 0) {
-		return;
+		return false;
 	}
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -153,7 +154,11 @@ void Rewrite(const SECTION_INFO &rInfoSection,
 		if (!WritePrivateProfileString(szSection, rInfoValue.strKey.c_str(), szRuleValue, pszFile)) {
 			LogInfoIn("–¥»Î %s  ß∞‹", pszFile);
 		}
+
+		return true;
 	}
+
+	return false;
 }
 }
 
@@ -171,7 +176,7 @@ CSQLIniCheckMgr::~CSQLIniCheckMgr(void)
 
 // ============================================================================
 // ==============================================================================
-void CSQLIniCheckMgr::Fix(const char *pszRuleFile)
+int CSQLIniCheckMgr::Fix(const char *pszRuleFile)
 {
 	//~~~~~~~~~~~~~~~~~~~~
 	char szLine[MAX_STRING];
@@ -179,17 +184,22 @@ void CSQLIniCheckMgr::Fix(const char *pszRuleFile)
 	//~~~~~~~~~~~~~~~~~~~~
 
 	fopen_s(&pFileRule, pszRuleFile, "r");
-	if (NULL == pFileRule) {
-		return;
+	if (NULL == pFileRule || pszRuleFile[0] == 0) {
+		return 0;
 	}
 
+	LogInfoIn("	%s checking ...", pszRuleFile);
+
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	int nCount = 0;
 	const char *pszFile = "$FILE";
 	const char *pszTable = "$TABLE";
 	const char *pszField = "$FIELD";
 	std::stack<CString> stackFile;
 	std::stack<CString> stackTable;
 	std::stack<CMyIni> stackIni;
+	std::string strFileList;
+	std::map<std::string, int> mapFiles;
 	std::vector<std::vector<std::string> > vecRet;
 	SECTION_INFO infoSection;
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -241,12 +251,37 @@ void CSQLIniCheckMgr::Fix(const char *pszRuleFile)
 			//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 			for (itSQLRow = vecRet.begin(); itSQLRow != vecRet.end(); ++itSQLRow) {
-				Rewrite(infoSection, infoValue, *itSQLRow, stackFile.top());
+				if (stackFile.top().GetLength()) {
+
+					//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+					std::string strFile = stackFile.top();
+					//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+					if (mapFiles.empty()) {
+						strFileList += strFile;
+						mapFiles[strFile] = 1;
+					} else if (mapFiles.find(strFile) == mapFiles.end()) {
+						strFileList += ",";
+						strFileList += strFile;
+						mapFiles[strFile] = 1;
+					}
+
+					if (Rewrite(infoSection, infoValue, *itSQLRow, stackFile.top())) {
+						++nCount;
+					}
+				}
 			}
 		}
 	}
 
 	fclose(pFileRule);
+	if (nCount) {
+		LogInfoIn("	%s done with rewrite %d value(s) of %s", pszRuleFile, nCount, strFileList.c_str());
+	} else {
+		LogInfoIn("	%s done with no change");
+	}
+
+	return nCount;
 }
 
 // ============================================================================

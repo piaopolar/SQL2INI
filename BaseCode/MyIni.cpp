@@ -38,10 +38,11 @@ bool CMyIni::Open(const char *pszFileName)
 		return false;
 	}
 
-	//~~~~~~~~~~~~~~~~~~~~
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	char szLine[MAX_STRING];
 	std::string strSection;
-	//~~~~~~~~~~~~~~~~~~~~
+	std::map<std::string, int> mapSectionError;
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	while (fgets(szLine, sizeof(szLine), pFile)) {
 
@@ -71,6 +72,16 @@ bool CMyIni::Open(const char *pszFileName)
 			if (pszEnd) {
 				*pszEnd = 0;
 				strSection = szLine + 1;
+
+				if (m_mapValue.find(strSection) != m_mapValue.end()) {
+					if (mapSectionError.find(strSection) == mapSectionError.end()) {
+						LogInfoIn("		警告: ini文件 %s 含有两项以上 Section 为 %s 的数据, ", pszFileName,
+								  strSection.c_str());
+						mapSectionError[strSection] = 1;
+					}
+
+					strSection = "重复项";
+				}
 			}
 
 			continue;

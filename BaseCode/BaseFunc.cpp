@@ -115,14 +115,14 @@ void LogInfoIn(const char *pszFormat, ...)
 	strLine = buffer;
 	free(buffer);
 
+	LogFile(strLine.c_str());
+
 	strLine += "\r\n";
 	cstrData += strLine.c_str();
 
 	s_pEditLog->SetWindowText(cstrData.GetBuffer(0));
 	s_pEditLog->UpdateWindow();
 	s_pEditLog->LineScroll(s_pEditLog->GetLineCount());
-
-	LogFile(strLine.c_str());
 }
 
 // ============================================================================

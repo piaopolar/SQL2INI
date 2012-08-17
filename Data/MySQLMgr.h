@@ -1,5 +1,4 @@
 #pragma once
-
 #include <string>
 #include <vector>
 #include "mysql.h"
@@ -10,16 +9,12 @@ class CMySQLMgr : public Singleton<CMySQLMgr>
 {
 public:
 	CMySQLMgr(void);
-	~CMySQLMgr(void);
+	~ CMySQLMgr(void);
 
-	bool Connect(const char *host,
-		const char *user,
-		const char *passwd,
-		const char *db,
-		unsigned int port);
-	std::string GetValue(const char* pszQueryField, const char *pszTable, const char *pszKeyField, const char *pszKeyValue);
-	std::vector < std::vector < std::string > >  QueryFields(const char* pszQueryFields, const char *pszTable);
+	bool Connect(const char *host, const char *user, const char *passwd, const char *db, unsigned int port);
+	std::string GetValue(const char *pszQueryField, const char *pszTable, const char *pszKeyField, const char *pszKeyValue);
+	std::vector<std::vector<std::string> > QueryFields(const char *pszQueryFields, const char *pszTable);
+	std::vector<std::vector<std::string> > Query(const char *pszQueryCmd);
 
 	MYSQL m_mysql;
 };
-

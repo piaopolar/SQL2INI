@@ -3,6 +3,7 @@
 #include "stdafx.h"
 
 #include "../BaseCode/BaseFunc.h"
+#include "../BaseCode/IniMgr.h"
 #include "SQLIniCheckMgr.h"
 
 #include "SQL2INI.h"
@@ -215,7 +216,26 @@ void CSQL2INIDlg::OnBnClickedBtnConnect()
 		return;
 	}
 
-	CSQLIniCheckMgr::GetInstance().Fix("monstertype.rule");
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	const char *pszRule = "Rule";
+	int nRuleCount = CIniMgr::GetInstance().GetValue(CONFIG_INI, pszRule, "Amount", 0);
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	for (int i = 1; i <= nRuleCount; ++i) {
+
+		//~~~~~~~~~~~~~~~~~~~
+		char szKey[MAX_STRING];
+		//~~~~~~~~~~~~~~~~~~~
+
+		_snprintf_s(szKey, sizeof(szKey), "RuleFile%d", i);
+
+		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		const char *pszFile = CIniMgr::GetInstance().GetValue(CONFIG_INI, pszRule, szKey, "");
+		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+		CSQLIniCheckMgr::GetInstance().Fix(pszFile);
+	}
+
 	LogInfoIn("处理完成");
 }
 
