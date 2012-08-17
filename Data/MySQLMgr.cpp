@@ -80,6 +80,25 @@ std::string CMySQLMgr::GetValue(const char *pszQueryField,
 // ==============================================================================
 std::vector<std::vector<std::string> > CMySQLMgr::QueryFields(const char *pszQueryFields, const char *pszTable)
 {
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	std::vector<std::vector<std::string> > vecRet;
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	if (NULL == pszQueryFields) {
+		return vecRet;
+	}
+
+	//~~~~~~~~~~~~~~~~~~~~~~~~
+	char szQueryCmd[MAX_STRING];
+	//~~~~~~~~~~~~~~~~~~~~~~~~
+
+	_snprintf_s(szQueryCmd, sizeof(szQueryCmd), "select %s from %s ", pszQueryFields, pszTable);
+	MyTrim(szQueryCmd);
+
+	if (szQueryCmd[0] == 30) {
+		return this->Query(szQueryCmd);
+	}
+
 	//~~~~~~~~~~~~~~~~~~~
 	char szKey[MAX_STRING];
 	//~~~~~~~~~~~~~~~~~~~
@@ -93,11 +112,6 @@ std::vector<std::vector<std::string> > CMySQLMgr::QueryFields(const char *pszQue
 	if (pszPos) {
 		*pszPos = 0;
 	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	std::vector<std::vector<std::string> > vecRet;
-	char szQueryCmd[MAX_STRING];
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	_snprintf_s(szQueryCmd, sizeof(szQueryCmd), "select %s from %s group by %s having COUNT(%s) > 1 ", pszQueryFields,
 				pszTable, szKey, szKey);

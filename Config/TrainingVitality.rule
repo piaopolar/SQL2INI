@@ -1,0 +1,45 @@
+cq_config表中的配置：
+type = 90004, //炼气所需要消耗的气力值，data1表示锁定属性数量为0所要消耗的气力值，data2表示锁定属性数量为1所要消耗的气力值，以此类推
+type = 90005, //炼气功能相关数据配置,data1表示玩家可用气力值的上限，data2表示每天自动增加的免费气力值
+type = 90006, //命格开启条件，data1表示命格编号，data2表示等级要求，data3表示转世要求，data4表示开启该位置的合格所需要前一个命格的属性总分最小值
+type = 90007, //玩家购买气力值的相关数据，data1表示补满气力值所需要天石的最大值
+
+$FILE ini/TrainingVitality.ini
+$FORCE 1
+
+$TABLE cq_config where type = 90004
+$FIELD "Strength", data1, data2, data3, data4, 3
+[$1]
+TrainLockMax=$6
+TrainLock0Lost=$2
+TrainLock1Lost=$3
+TrainLock2Lost=$4
+TrainLock3Lost=$5
+
+$TABLE cq_config where type = 90005
+$FIELD "Strength", data1
+[$1]
+MaxStrength=$2
+
+$TABLE cq_config where type = 90007
+$FIELD "Strength", data1
+[$1]
+AddStrengthMaxCost=$2
+
+
+$TABLE cq_config where type = 90006
+$FIELD "OpenLimit", data1, data2, data3, data4
+[$1]
+OpenLimit$2=$4,$3,$5
+
+
+$TABLE cq_fate_rule group by "FateType"
+$FIELD "FateType", count(*)
+[$1]
+Amount=$2
+
+
+$TABLE cq_fate_rule
+$FIELD "FateType", id, fate_no, attib_type, appear_weight,attrib_value_min, attrib_value_max
+[$1]
+FateType$2=$3,$4,$5,$6,$7

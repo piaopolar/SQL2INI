@@ -75,53 +75,71 @@ SECTION_INFO GetSectionInfo(char *pszLine)
 	return infoRet;
 }
 
-struct VALUE_INFO
+struct VALUE_FORMAT
 {
-	std::string strKey;
+	std::string strKeyFormat;
 	std::string strValueFormat;
-	int nValueIndex;
-	VALUE_INFO() {
-		nValueIndex = -1;
-	}
 };
 
 // ============================================================================
 // ==============================================================================
 
-VALUE_INFO GetValueInfo(char *pszLine)
+VALUE_FORMAT GetValueFormat(char *pszLine)
 {
-	//~~~~~~~~~~~~~~~
-	VALUE_INFO infoRet;
-	//~~~~~~~~~~~~~~~
+	//~~~~~~~~~~~~~~~~~
+	VALUE_FORMAT infoRet;
+	//~~~~~~~~~~~~~~~~~
 
-	infoRet.strKey = pszLine;
-	std::string::size_type sizePos = infoRet.strKey.find("=");
+	infoRet.strKeyFormat = pszLine;
+	std::string::size_type sizePos = infoRet.strKeyFormat.find("=");
 	if (sizePos == std::string::npos) {
 		return infoRet;
 	}
 
-	infoRet.strValueFormat = infoRet.strKey.substr(sizePos + 1);
-	infoRet.strKey = infoRet.strKey.substr(0, sizePos);
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	std::string strTransPart = GetTransPart(pszLine);
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	if (!strTransPart.empty()) {
-		ReplaceStdString(infoRet.strValueFormat, strTransPart, "%s");
-		MyTrim(infoRet.strValueFormat);
-		sscanf_s(strTransPart.c_str() + 1, "%d", &infoRet.nValueIndex);
-	}
+	infoRet.strValueFormat = infoRet.strKeyFormat.substr(sizePos + 1);
+	infoRet.strKeyFormat = infoRet.strKeyFormat.substr(0, sizePos);
 
 	return infoRet;
 }
 
 // ============================================================================
 // ==============================================================================
+std::string FormatValueStr(std::string str)
+{
+	std::string::size_type sizePos = str.find_first_not_of('0');
+	if (sizePos == std::string::npos) {
+		str = "0";
+	} else {
+		str = str.substr(sizePos);
+	}
+
+	return str;
+}
+
+// ============================================================================
+// ==============================================================================
+std::string GetValue(std::string strFormat, const std::vector<std::string> &rVec)
+{
+	for (unsigned i = rVec.size(); i > 0; --i) {
+
+		//~~~~~~~~~~~~~~~~~~~~~~~
+		char szReplace[MAX_STRING];
+		//~~~~~~~~~~~~~~~~~~~~~~~
+
+		_snprintf_s(szReplace, sizeof(szReplace), "$%d", i);
+		ReplaceStdString(strFormat, szReplace, FormatValueStr(rVec.at(i - 1)));
+	}
+
+	return strFormat;
+}
+
+// ============================================================================
+// ==============================================================================
 bool Rewrite(const SECTION_INFO &rInfoSection,
-			 const VALUE_INFO &rInfoValue,
+			 const VALUE_FORMAT &rInfoValue,
 			 const std::vector<std::string> &rSQLRow,
-			 const char *pszFile)
+			 const char *pszFile,
+			 BOOL bForce)
 {
 	//~~~~~~~~~~~~~~~~~~~~~~~
 	char szSection[MAX_STRING];
@@ -129,29 +147,21 @@ bool Rewrite(const SECTION_INFO &rInfoSection,
 
 	_snprintf_s(szSection, sizeof(szSection), rInfoSection.strFormat.c_str(), rSQLRow.at(rInfoSection.nIndex - 1).c_str());
 
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	const char *pszIniValue = CIniMgr::GetInstance().GetValue(pszFile, szSection, rInfoValue.strKey.c_str(), "");
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	std::string strKey = GetValue(rInfoValue.strKeyFormat, rSQLRow);
+	const char *pszIniValue = CIniMgr::GetInstance().GetValue(pszFile, szSection, strKey.c_str(), "");
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	if (pszIniValue[0] == 0) {
+	if (pszIniValue[0] == 0 && !bForce) {
 		return false;
 	}
 
-	//~~~~~~~~~~~~~~~~~~~~~~~~~
-	char szRuleValue[MAX_STRING];
-	//~~~~~~~~~~~~~~~~~~~~~~~~~
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	std::string strRuleValue = GetValue(rInfoValue.strValueFormat, rSQLRow);
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	_snprintf_s(szRuleValue, sizeof(szRuleValue), rInfoValue.strValueFormat.c_str(),
-				rSQLRow.at(rInfoValue.nValueIndex - 1).c_str());
-	if (ValueStrCmp(pszIniValue, szRuleValue)) {
-
-		//~~~~~~~~~~~
-		int nValue = 0;
-		//~~~~~~~~~~~
-
-		sscanf_s(szRuleValue, "%d", &nValue);
-		_snprintf_s(szRuleValue, sizeof(szRuleValue), "%d", nValue);
-		if (!WritePrivateProfileString(szSection, rInfoValue.strKey.c_str(), szRuleValue, pszFile)) {
+	if (ValueStrCmp(strRuleValue.c_str(), pszIniValue)) {
+		if (!WritePrivateProfileString(szSection, strKey.c_str(), strRuleValue.c_str(), pszFile)) {
 			LogInfoIn("写入 %s 失败", pszFile);
 		}
 
@@ -192,9 +202,11 @@ int CSQLIniCheckMgr::Fix(const char *pszRuleFile)
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	int nCount = 0;
+	BOOL bForce = FALSE;
 	const char *pszFile = "$FILE";
 	const char *pszTable = "$TABLE";
 	const char *pszField = "$FIELD";
+	const char *pszForce = "$FORCE";
 	std::stack<CString> stackFile;
 	std::stack<CString> stackTable;
 	std::stack<CMyIni> stackIni;
@@ -228,6 +240,11 @@ int CSQLIniCheckMgr::Fix(const char *pszRuleFile)
 			continue;
 		}
 
+		/* $FILE 前的文字均作为注释 */
+		if (stackFile.empty()) {
+			continue;
+		}
+
 		if (strstr(szLine, pszTable) == szLine) {
 			stackTable.push(szLine + strlen(pszTable));
 			continue;
@@ -238,6 +255,10 @@ int CSQLIniCheckMgr::Fix(const char *pszRuleFile)
 			continue;
 		}
 
+		if (strstr(szLine, pszForce) == szLine) {
+			sscanf_s(szLine, "%*s%d", &bForce);
+		}
+
 		if (cFirst == '[') {
 			infoSection = GetSectionInfo(szLine);
 			continue;
@@ -246,7 +267,7 @@ int CSQLIniCheckMgr::Fix(const char *pszRuleFile)
 		if (strstr(szLine, "=")) {
 
 			//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-			VALUE_INFO infoValue = GetValueInfo(szLine);
+			VALUE_FORMAT infoValue = GetValueFormat(szLine);
 			std::vector<std::vector<std::string> >::const_iterator itSQLRow;
 			//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -266,7 +287,7 @@ int CSQLIniCheckMgr::Fix(const char *pszRuleFile)
 						mapFiles[strFile] = 1;
 					}
 
-					if (Rewrite(infoSection, infoValue, *itSQLRow, stackFile.top())) {
+					if (Rewrite(infoSection, infoValue, *itSQLRow, stackFile.top(), bForce)) {
 						++nCount;
 					}
 				}
