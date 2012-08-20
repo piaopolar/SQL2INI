@@ -162,7 +162,10 @@ bool Rewrite(const SECTION_INFO &rInfoSection,
 
 	if (ValueStrCmp(strRuleValue.c_str(), pszIniValue)) {
 		if (!WritePrivateProfileString(szSection, strKey.c_str(), strRuleValue.c_str(), pszFile)) {
-			LogInfoIn("写入 %s 失败", pszFile);
+			LogInfoIn("		写入 %s 失败", pszFile);
+		} else {
+			LogInfoIn("		修改成功： Section :%s  Key:%s Value %s -> %s", szSection, strKey.c_str(), pszIniValue,
+					  strRuleValue.c_str());
 		}
 
 		return true;

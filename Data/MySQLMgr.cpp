@@ -88,14 +88,19 @@ std::vector<std::vector<std::string> > CMySQLMgr::QueryFields(const char *pszQue
 		return vecRet;
 	}
 
+	//~~~~~~~~~~~~~~~~~~~~~~
+	char szFields[MAX_STRING];
+	//~~~~~~~~~~~~~~~~~~~~~~
+
+	strncpy_s(szFields, pszQueryFields, sizeof(szFields));
+	MyTrim(szFields);
+
 	//~~~~~~~~~~~~~~~~~~~~~~~~
 	char szQueryCmd[MAX_STRING];
 	//~~~~~~~~~~~~~~~~~~~~~~~~
 
-	_snprintf_s(szQueryCmd, sizeof(szQueryCmd), "select %s from %s ", pszQueryFields, pszTable);
-	MyTrim(szQueryCmd);
-
-	if (szQueryCmd[0] == 30) {
+	if (szFields[0] == 34) {
+		_snprintf_s(szQueryCmd, sizeof(szQueryCmd), "select %s from %s ", pszQueryFields, pszTable);
 		return this->Query(szQueryCmd);
 	}
 

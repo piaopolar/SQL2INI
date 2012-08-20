@@ -92,12 +92,6 @@ void LogInfoIn(const char *pszFormat, ...)
 		return;
 	}
 
-	//~~~~~~~~~~~~~
-	CString cstrData;
-	//~~~~~~~~~~~~~
-
-	s_pEditLog->GetWindowText(cstrData);
-
 	//~~~~~~~~~~~~~~~~
 	std::string strLine;
 	va_list args;
@@ -118,10 +112,13 @@ void LogInfoIn(const char *pszFormat, ...)
 	LogFile(strLine.c_str());
 
 	strLine += "\r\n";
-	cstrData += strLine.c_str();
 
-	s_pEditLog->SetWindowText(cstrData.GetBuffer(0));
-	s_pEditLog->UpdateWindow();
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	int nLength = s_pEditLog->GetWindowTextLength();
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	s_pEditLog->SetSel(nLength, nLength);
+	s_pEditLog->ReplaceSel(strLine.c_str());
 	s_pEditLog->LineScroll(s_pEditLog->GetLineCount());
 }
 
