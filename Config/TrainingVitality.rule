@@ -7,8 +7,7 @@ type = 90007, //玩家购买气力值的相关数据，data1表示补满气力值所需要天石的最大值
 $FILE ini/TrainingVitality.ini
 $FORCE 1
 
-$TABLE cq_config where type = 90004
-$FIELD "Strength", data1, data2, data3, data4, 3
+$SQL select "Strength", data1, data2, data3, data4, 3 from cq_config where type = 90004
 [$1]
 TrainLockMax=$6
 TrainLock0Lost=$2
@@ -16,30 +15,24 @@ TrainLock1Lost=$3
 TrainLock2Lost=$4
 TrainLock3Lost=$5
 
-$TABLE cq_config where type = 90005
-$FIELD "Strength", data1
+$SQL select "Strength", data1 from cq_config where type = 90005
 [$1]
 MaxStrength=$2
 
-$TABLE cq_config where type = 90007
-$FIELD "Strength", data1
+$SQL select "Strength", data1 from cq_config where type = 90007
 [$1]
 AddStrengthMaxCost=$2
 
-
-$TABLE cq_config where type = 90006
-$FIELD "OpenLimit", data1, data2, data3, data4
+$SQL select "OpenLimit", data1, data2, data3, data4 from cq_config where type = 90006
 [$1]
 OpenLimit$2=$4,$3,$5
 
 
-$TABLE cq_fate_rule group by "FateType"
-$FIELD "FateType", count(*)
+$SQL select "FateType", count(*) from cq_fate_rule group by "FateType"
 [$1]
 Amount=$2
 
 
-$TABLE cq_fate_rule
-$FIELD "FateType", id, fate_no, attib_type, appear_weight,attrib_value_min, attrib_value_max
+$SQL select "FateType", id, fate_no, attib_type, appear_weight,attrib_value_min, attrib_value_max from cq_fate_rule
 [$1]
 FateType$2=$3,$4,$5,$6,$7

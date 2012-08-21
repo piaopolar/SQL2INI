@@ -210,6 +210,7 @@ int CSQLIniCheckMgr::Fix(const char *pszRuleFile)
 	const char *pszTable = "$TABLE";
 	const char *pszField = "$FIELD";
 	const char *pszForce = "$FORCE";
+	const char *pszSQL = "$SQL";
 	std::stack<CString> stackFile;
 	std::stack<CString> stackTable;
 	std::stack<CMyIni> stackIni;
@@ -255,6 +256,11 @@ int CSQLIniCheckMgr::Fix(const char *pszRuleFile)
 
 		if (strstr(szLine, pszField) == szLine) {
 			vecRet = CMySQLMgr::GetInstance().QueryFields(szLine + strlen(pszField), stackTable.top());
+			continue;
+		}
+
+		if (strstr(szLine, pszSQL) == szLine) {
+			vecRet = CMySQLMgr::GetInstance().Query(szLine + strlen(pszSQL));
 			continue;
 		}
 
