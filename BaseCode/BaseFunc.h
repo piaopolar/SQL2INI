@@ -1,14 +1,16 @@
 #pragma once
 #include <afxwin.h>
 #include <string>
+#include <vector>
 
 #define CONFIG_INI	"./config.ini"
 
 const int MAX_STRING = 1024;
 
 std::string GetTimeStr(void);
-int ValueStrCmp(const char* pszStr1, const char *pszStr2);
+int ValueStrCmp(const char *pszStr1, const char *pszStr2);
 void FormatPath(std::string &strPath);
+std::vector<std::string> GetDirFilePathList(const char *pszDir, const char *pszExt = NULL);
 bool IsIncludeFileNamePath(std::string strPath);
 void MyMakeSureDirectoryPathExists(std::string strPath);
 void TrimRight(char *pszStr);
@@ -28,4 +30,4 @@ std::string UTF8_2_ANSI(const std::string &strUTF8);
 std::wstring UTF8_2_UTF16(const std::string &strUTF8);
 std::string UTF16_2_ANSI(const std::wstring &strUTF16);
 std::string UTF16_2_UTF8(const std::wstring &strUTF16);
-bool UTF16_2_ANSI(const wchar_t* wszUTF16, char *szANSI, int nBufANSI);
+bool UTF16_2_ANSI(const wchar_t *wszUTF16, char *szANSI, int nBufANSI);

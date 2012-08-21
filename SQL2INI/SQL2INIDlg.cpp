@@ -216,24 +216,12 @@ void CSQL2INIDlg::OnBnClickedBtnConnect()
 		return;
 	}
 
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	const char *pszRule = "Rule";
-	int nRuleCount = CIniMgr::GetInstance().GetValue(CONFIG_INI, pszRule, "Amount", 0);
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	std::vector<std::string> vecRuleFiles = GetDirFilePathList("./Rules", ".rule");
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	for (int i = 1; i <= nRuleCount; ++i) {
-
-		//~~~~~~~~~~~~~~~~~~~
-		char szKey[MAX_STRING];
-		//~~~~~~~~~~~~~~~~~~~
-
-		_snprintf_s(szKey, sizeof(szKey), "RuleFile%d", i);
-
-		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		const char *pszFile = CIniMgr::GetInstance().GetValue(CONFIG_INI, pszRule, szKey, "");
-		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-		CSQLIniCheckMgr::GetInstance().Fix(pszFile);
+	for (std::vector < std::string >::const_iterator it = vecRuleFiles.begin(); it != vecRuleFiles.end(); ++it) {
+		CSQLIniCheckMgr::GetInstance().Fix(it->c_str());
 	}
 
 	LogInfoIn("处理完成");
@@ -307,10 +295,10 @@ void CSQL2INIDlg::SaveConfig(const CEdit &rEdit) const
 // ==============================================================================
 CString CSQL2INIDlg::GetConfigSection(const CWnd *pWnd) const
 {
-	//~~~~~~~~~~~~
-	CString cstrRet;
-	//~~~~~~~~~~~~
+	//~~~~~~~~~~~~~~~~~~~~~~~
+	char szSection[MAX_STRING];
+	//~~~~~~~~~~~~~~~~~~~~~~~
 
-	_snprintf(cstrRet.GetBuffer(MAX_STRING), MAX_STRING, "%d-%d", this->GetDlgCtrlID(), pWnd->GetDlgCtrlID());
-	return cstrRet;
+	_snprintf_s(szSection, sizeof(szSection), "%d-%d", this->GetDlgCtrlID(), pWnd->GetDlgCtrlID());
+	return szSection;
 }

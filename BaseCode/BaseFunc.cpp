@@ -545,3 +545,55 @@ int ValueStrCmp(const char *pszStr1, const char *pszStr2)
 
 	return strcmp(pszStr1, pszStr2);
 }
+
+// ============================================================================
+// ==============================================================================
+std::vector<std::string> GetDirFilePathList(const char *pszDir, const char *pszExt /* NULL */ )
+{
+	//~~~~~~~~~~~~~~~~~~~~~~~
+	char szDirSave[MAX_STRING];
+	//~~~~~~~~~~~~~~~~~~~~~~~
+
+	GetCurrentDirectory(sizeof(szDirSave), szDirSave);
+	SetCurrentDirectory(pszDir);
+
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	std::vector<std::string> vecFilePaths;
+	CFileFind finder;
+	BOOL bWorking = finder.FindFile("*.*");
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	while (bWorking) {
+		bWorking = finder.FindNextFile();
+		if (finder.IsDots()) {
+			continue;
+		}
+
+		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		CString cstrPath = finder.GetFilePath();
+		const char *pszPath = cstrPath.GetBuffer();
+		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+		if (finder.IsDirectory()) {
+
+			//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			std::vector<std::string> vecChild = GetDirFilePathList(pszPath, pszExt);
+			//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+			vecFilePaths.insert(vecFilePaths.end(), vecChild.begin(), vecChild.end());
+		} else {
+
+			//~~~~~~~~~~~~~~~~~~~
+			char szExt[MAX_STRING];
+			//~~~~~~~~~~~~~~~~~~~
+
+			_splitpath(pszPath, NULL, NULL, NULL, szExt);
+			if (!_stricmp(szExt, pszExt)) {
+				vecFilePaths.push_back(pszPath);
+			}
+		}
+	}
+
+	SetCurrentDirectory(szDirSave);
+	return vecFilePaths;
+}
