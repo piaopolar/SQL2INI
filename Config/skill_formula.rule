@@ -1,0 +1,9 @@
+$FILE skill_formula.cpp
+
+$TABLE skill_formula
+
+$FIELD skill_formula_id, formula
+
+$REPLACE rValue fValue
+
+$GEN case $1: fValue = $2; break;

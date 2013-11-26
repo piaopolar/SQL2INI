@@ -221,7 +221,7 @@ void CSQL2INIDlg::OnBnClickedBtnConnect()
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	for (std::vector < std::string >::const_iterator it = vecRuleFiles.begin(); it != vecRuleFiles.end(); ++it) {
-		CSQLIniCheckMgr::GetInstance().Fix(it->c_str());
+		CSQLIniCheckMgr::GetInstance().Process(it->c_str());
 	}
 
 	LogInfoIn("处理完成");
