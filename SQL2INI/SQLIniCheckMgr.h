@@ -7,6 +7,6 @@ public:
 	CSQLIniCheckMgr(void);
 	~ CSQLIniCheckMgr(void);
 
-	int Fix(const char *pszRuleFile);
+	int Process(const char *pszRuleFile);
 	bool Connect(const char *host, const char *user, const char *passwd, const char *db, unsigned int port);
 };
