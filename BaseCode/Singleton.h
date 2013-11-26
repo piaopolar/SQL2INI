@@ -1,5 +1,5 @@
 #pragma once
-#include <boost/pool/detail/singleton.hpp>
+#include <boost/serialization/singleton.hpp>
 
 template<class T>
 class Singleton
@@ -7,6 +7,6 @@ class Singleton
 public:
 	static T &GetInstance()
 	{
-		return boost::details::pool::singleton_default<T>::instance();
+		return boost::serialization::singleton<T>::get_mutable_instance();
 	}
 };

@@ -20,6 +20,17 @@ struct SECTION_INFO
 	}
 };
 
+struct REPLACE_INFO
+{
+	REPLACE_INFO(const char *pszSrc, const char *pszDst) {
+		strSrc = pszSrc ? pszSrc : "";
+		strDst = pszDst ? pszDst : "";
+	}
+
+	std::string strSrc;
+	std::string strDst;
+};
+
 // ============================================================================
 // ==============================================================================
 
@@ -173,6 +184,34 @@ bool Rewrite(const SECTION_INFO &rInfoSection,
 
 	return false;
 }
+
+bool Gen(const char *pszFormat, 
+		 const std::vector<std::vector<std::string> >& rSQLdata,
+		 const std::vector<REPLACE_INFO> vecReplace,
+		 const char *pszFileGen,
+		 BOOL bNew)
+{
+	FILE* pFileGen = NULL;
+	fopen_s(&pFileGen , pszFileGen, bNew ? "w" : "a");
+
+	if (NULL == pFileGen) {
+		LogInfoIn("		打开生成文件 %s 失败", pszFileGen);
+		return false;
+	}
+
+	for (std::vector<std::vector<std::string> >::const_iterator it(rSQLdata.begin()); it != rSQLdata.end(); ++it) {
+		std::string strValue = GetValue(pszFormat, *it);
+		for (std::vector<REPLACE_INFO>::const_iterator itReplace(vecReplace.begin()); itReplace != vecReplace.end(); ++itReplace) {
+			ReplaceStdString(strValue, itReplace->strSrc, itReplace->strDst);
+		}
+
+		fprintf_s(pFileGen, "%s\n", strValue.c_str());
+	}
+	
+	fclose(pFileGen);
+	LogInfoIn("		成功%s%s，写入%d行数据", bNew ? "生成" : "添加", pszFileGen, rSQLdata.size());
+	return true;
+}
 }
 
 // ============================================================================
@@ -189,7 +228,7 @@ CSQLIniCheckMgr::~CSQLIniCheckMgr(void)
 
 // ============================================================================
 // ==============================================================================
-int CSQLIniCheckMgr::Fix(const char *pszRuleFile)
+int CSQLIniCheckMgr::Process(const char *pszRuleFile)
 {
 	//~~~~~~~~~~~~~~~~~~~~
 	char szLine[MAX_STRING];
@@ -201,24 +240,35 @@ int CSQLIniCheckMgr::Fix(const char *pszRuleFile)
 		return 0;
 	}
 
-	LogInfoIn("	%s checking ...", pszRuleFile);
+	LogInfoIn("	%s processing ...", pszRuleFile);
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	int nCount = 0;
+	int nCountGen = 0;
+	int nCountRewrite = 0;
 	BOOL bForce = FALSE;
+	BOOL bGenNew = TRUE;
 	const char *pszFile = "$FILE";
 	const char *pszTable = "$TABLE";
 	const char *pszField = "$FIELD";
 	const char *pszForce = "$FORCE";
 	const char *pszSQL = "$SQL";
+	const char *pszGen = "$GEN";
+	const char *pszReplace = "$REPLACE";
 	std::stack<CString> stackFile;
 	std::stack<CString> stackTable;
 	std::stack<CMyIni> stackIni;
-	std::string strFileList;
-	std::map<std::string, int> mapFiles;
+	std::string strFileListGen;
+	std::string strFileListRewrite;
+	std::map<std::string, int> mapFilesGen;
+	std::map<std::string, int> mapFilesRewrite;
 	std::vector<std::vector<std::string> > vecRet;
+	std::vector<REPLACE_INFO> vecReplace;
 	SECTION_INFO infoSection;
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	vecReplace.push_back(REPLACE_INFO("\\r", "\r"));
+	vecReplace.push_back(REPLACE_INFO("\\n", "\n"));
+	vecReplace.push_back(REPLACE_INFO("\\t", "\t"));
 
 	while (fgets(szLine, sizeof(szLine), pFileRule)) {
 
@@ -268,12 +318,41 @@ int CSQLIniCheckMgr::Fix(const char *pszRuleFile)
 			sscanf_s(szLine, "%*s%d", &bForce);
 		}
 
+		if (strstr(szLine, pszReplace) == szLine) {
+			char szSrc[MAX_STRING];
+			char szDst[MAX_STRING];
+			if (2 == sscanf_s(szLine, "%*s%s%s", szSrc,  _countof(szSrc), szDst,  _countof(szDst))) {
+				vecReplace.push_back(REPLACE_INFO(szSrc, szDst));
+			}
+		}
+
 		if (cFirst == '[') {
 			infoSection = GetSectionInfo(szLine);
 			continue;
 		}
 
-		if (strstr(szLine, "=")) {
+		if (strstr(szLine, pszGen) == szLine) {
+			
+			std::string strFile = stackFile.top();
+			if (strFile.empty()) {
+				continue;
+			}
+
+			if (mapFilesGen.empty()) {
+				strFileListGen += strFile;
+				mapFilesGen[strFile] = 1;
+			} else if (mapFilesGen.find(strFile) == mapFilesGen.end()) {
+				strFileListGen += ",";
+				strFileListGen += strFile;
+				mapFilesGen[strFile] = 1;
+			}
+			
+			if (!Gen(szLine + strlen(pszGen) + 1, vecRet, vecReplace, strFile.c_str(), bGenNew)) {
+				continue;
+			}
+
+			nCountGen += vecRet.size();
+		} else if (strstr(szLine, "=")) {
 
 			//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			VALUE_FORMAT infoValue = GetValueFormat(szLine);
@@ -287,17 +366,17 @@ int CSQLIniCheckMgr::Fix(const char *pszRuleFile)
 					std::string strFile = stackFile.top();
 					//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-					if (mapFiles.empty()) {
-						strFileList += strFile;
-						mapFiles[strFile] = 1;
-					} else if (mapFiles.find(strFile) == mapFiles.end()) {
-						strFileList += ",";
-						strFileList += strFile;
-						mapFiles[strFile] = 1;
+					if (mapFilesRewrite.empty()) {
+						strFileListRewrite += strFile;
+						mapFilesRewrite[strFile] = 1;
+					} else if (mapFilesRewrite.find(strFile) == mapFilesRewrite.end()) {
+						strFileListRewrite += ",";
+						strFileListRewrite += strFile;
+						mapFilesRewrite[strFile] = 1;
 					}
 
 					if (Rewrite(infoSection, infoValue, *itSQLRow, stackFile.top(), bForce)) {
-						++nCount;
+						++nCountRewrite;
 					}
 				}
 			}
@@ -305,13 +384,27 @@ int CSQLIniCheckMgr::Fix(const char *pszRuleFile)
 	}
 
 	fclose(pFileRule);
-	if (nCount) {
-		LogInfoIn("	%s done with rewrite %d value(s) of %s", pszRuleFile, nCount, strFileList.c_str());
-	} else {
-		LogInfoIn("	%s done with no change", pszRuleFile);
+	CString cstrInfo;
+	cstrInfo.Format("	%s done with ", pszRuleFile);
+	if (nCountGen) {
+		CString cstrGen;
+		cstrGen.Format("gen %d value(s) of %s", nCountGen, strFileListGen.c_str());
+		cstrInfo += cstrGen;
 	}
 
-	return nCount;
+	if (nCountRewrite) {
+		CString cstrRewrite;
+		cstrRewrite.Format("rewrite %d value(s) of %s", nCountRewrite, strFileListRewrite.c_str());
+		cstrInfo += cstrRewrite;
+	}
+
+	if (!nCountGen && !nCountRewrite) {
+		cstrInfo += "no change";
+	}
+	
+	LogInfoIn(cstrInfo);
+
+	return nCountRewrite;
 }
 
 // ============================================================================
