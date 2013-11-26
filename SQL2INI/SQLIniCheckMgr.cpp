@@ -268,6 +268,7 @@ int CSQLIniCheckMgr::Process(const char *pszRuleFile)
 
 	vecReplace.push_back(REPLACE_INFO("\\r", "\r"));
 	vecReplace.push_back(REPLACE_INFO("\\n", "\n"));
+	vecReplace.push_back(REPLACE_INFO("\\t", "\t"));
 
 	while (fgets(szLine, sizeof(szLine), pFileRule)) {
 
@@ -346,7 +347,7 @@ int CSQLIniCheckMgr::Process(const char *pszRuleFile)
 				mapFilesGen[strFile] = 1;
 			}
 			
-			if (!Gen(szLine + strlen(pszGen), vecRet, vecReplace, strFile.c_str(), bGenNew)) {
+			if (!Gen(szLine + strlen(pszGen) + 1, vecRet, vecReplace, strFile.c_str(), bGenNew)) {
 				continue;
 			}
 
