@@ -14,6 +14,7 @@ std::vector<std::string> GetDirFilePathList(const char *pszDir, const char *pszE
 bool IsIncludeFileNamePath(std::string strPath);
 void MyMakeSureDirectoryPathExists(std::string strPath);
 void TrimRight(char *pszStr);
+void TrimCRLE(char *pszStr);
 void SetLogEdit(CEdit *pEditLog);
 void LogInfoIn(const char *pszFormat, ...);
 void LogFile(const char *pszFormat, ...);

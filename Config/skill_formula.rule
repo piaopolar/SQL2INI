@@ -1,9 +1,50 @@
 $FILE skill_formula.cpp
 
+$PRE 1
+//
+//  skill_formula.cpp
+//  CMWar_2dx
+//
+//  Created by Ruoqian, Chen on 13-11-26.
+//
+//
+#include "StdAfx.h"
+
+#include "skill_formula.h"
+
+USING_NS_CMWAR;
+
+// generator with tool SQL2INI, source code: https://github.com/piaopolar/SQL2INI
+
+float cmwar::GetSkillFormulaResult(const SKILL_EFFECT_ARG& argSkill, float fValue)
+{
+	int nFormulaId = argSkill.m_nFunNo;
+	float myself_atk = CFightMgr::GetInstance()->GetValue(argSkill.m_nSenderSide, FIGHT_ATTRIB_ATK);
+	float myself_def = CFightMgr::GetInstance()->GetValue(argSkill.m_nSenderSide, FIGHT_ATTRIB_DEF);
+	float myself_hp_recover = CFightMgr::GetInstance()->GetValue(argSkill.m_nSenderSide, FIGHT_ATTRIB_HP_RECOVER);
+	float myself_maxhp = CFightMgr::GetInstance()->GetValue(argSkill.m_nSenderSide, FIGHT_ATTRIB_MAX_HP);
+	float enemy_hp = CFightMgr::GetInstance()->GetValue(argSkill.m_nSenderSide == FIGHT_SIDE_MYSELF ? FIGHT_SIDE_ENEMY : FIGHT_SIDE_MYSELF, FIGHT_ATTRIB_HP);
+	float enemy_atk = CFightMgr::GetInstance()->GetValue(argSkill.m_nSenderSide == FIGHT_SIDE_MYSELF ? FIGHT_SIDE_ENEMY : FIGHT_SIDE_MYSELF, FIGHT_ATTRIB_ATK);
+	float enemy_def = CFightMgr::GetInstance()->GetValue(argSkill.m_nSenderSide == FIGHT_SIDE_MYSELF ? FIGHT_SIDE_ENEMY : FIGHT_SIDE_MYSELF, FIGHT_ATTRIB_DEF);
+	float enemy_hp_recover = CFightMgr::GetInstance()->GetValue(argSkill.m_nSenderSide == FIGHT_SIDE_MYSELF ? FIGHT_SIDE_ENEMY : FIGHT_SIDE_MYSELF, FIGHT_ATTRIB_HP_RECOVER);
+	float enemy_maxhp = CFightMgr::GetInstance()->GetValue(argSkill.m_nSenderSide == FIGHT_SIDE_MYSELF ? FIGHT_SIDE_ENEMY : FIGHT_SIDE_MYSELF, FIGHT_ATTRIB_MAX_HP);
+	float card_atk = CFightMgr::GetInstance()->GetValue(argSkill.m_nSenderSide, FIGHT_ATTRIB_ATK, FIGHT_VALUE_TYPE_ORG, argSkill.m_nSenderSlot);
+	switch (nFormulaId)	{
+$PRE 0
+
+$NEWFILE 0
+
 $TABLE skill_formula
 
 $FIELD skill_formula_id, formula
 
 $REPLACE rValue fValue
 
-$GEN case $1: fValue = $2; break;
+$GEN \tcase $1: fValue = $2; break;
+
+$PRE 1
+	}
+
+	return fValue;
+}
+$PRE 0

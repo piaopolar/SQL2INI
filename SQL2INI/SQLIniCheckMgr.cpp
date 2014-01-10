@@ -226,6 +226,23 @@ CSQLIniCheckMgr::~CSQLIniCheckMgr(void)
 {
 }
 
+bool GenPre(const char *pszLine, 
+		 const char *pszFileGen,
+		 BOOL bNew)
+{
+	FILE* pFileGen = NULL;
+	fopen_s(&pFileGen , pszFileGen, bNew ? "w" : "a");
+
+	if (NULL == pFileGen) {
+		LogInfoIn("		打开生成文件 %s 失败", pszFileGen);
+		return false;
+	}
+
+	fputs(pszLine, pFileGen);	
+	fclose(pFileGen);
+	return true;
+}
+
 // ============================================================================
 // ==============================================================================
 int CSQLIniCheckMgr::Process(const char *pszRuleFile)
@@ -247,6 +264,7 @@ int CSQLIniCheckMgr::Process(const char *pszRuleFile)
 	int nCountRewrite = 0;
 	BOOL bForce = FALSE;
 	BOOL bGenNew = TRUE;
+	BOOL bPreMode = FALSE;
 	const char *pszFile = "$FILE";
 	const char *pszTable = "$TABLE";
 	const char *pszField = "$FIELD";
@@ -254,9 +272,14 @@ int CSQLIniCheckMgr::Process(const char *pszRuleFile)
 	const char *pszSQL = "$SQL";
 	const char *pszGen = "$GEN";
 	const char *pszReplace = "$REPLACE";
+	const char *pszReplaceSrc = "$REPLACE_SRC";
+	const char *pszReplaceDst = "$REPLACE_DST";
+	const char *pszNewFile = "$NEWFILE";
+	const char *pszPre = "$PRE";
 	std::stack<CString> stackFile;
 	std::stack<CString> stackTable;
 	std::stack<CMyIni> stackIni;
+	std::string strReplaceSrc;
 	std::string strFileListGen;
 	std::string strFileListRewrite;
 	std::map<std::string, int> mapFilesGen;
@@ -271,6 +294,22 @@ int CSQLIniCheckMgr::Process(const char *pszRuleFile)
 	vecReplace.push_back(REPLACE_INFO("\\t", "\t"));
 
 	while (fgets(szLine, sizeof(szLine), pFileRule)) {
+
+		if (strstr(szLine, pszPre) == szLine) {
+			sscanf_s(szLine, "%*s%d", &bPreMode);
+			if (bPreMode && bGenNew) {
+				std::string strFile = stackFile.top();
+				GenPre("", strFile.c_str(), true);
+			}
+
+			continue;
+		}
+
+		if (bPreMode) {
+			std::string strFile = stackFile.top();
+			GenPre(szLine, strFile.c_str(), false);
+			continue;
+		}
 
 		//~~~~~~~~~~~~~~~~~~~~
 		char cFirst = szLine[0];
@@ -287,7 +326,33 @@ int CSQLIniCheckMgr::Process(const char *pszRuleFile)
 			break;
 		}
 
+		if (strstr(szLine, pszReplaceSrc) == szLine) {
+			TrimCRLE(szLine);
+			strReplaceSrc = szLine + strlen(pszReplaceSrc) + 1;
+
+			continue;
+		}
+
+		if (strstr(szLine, pszReplaceDst) == szLine) {
+			TrimCRLE(szLine);
+			const char *pszDst = szLine + strlen(pszReplaceDst);
+			if (pszDst[0] == 0) {
+				pszDst = "";
+			} else {
+				pszDst++;
+			}
+
+			vecReplace.push_back(REPLACE_INFO(strReplaceSrc.c_str(), pszDst));
+
+			continue;
+		}
+
 		MyTrim(szLine);
+
+		if (strstr(szLine, pszNewFile) == szLine) {
+			sscanf_s(szLine, "%*s%d", &bGenNew);
+			continue;
+		}
 
 		if (strstr(szLine, pszFile) == szLine) {
 			stackFile.push(szLine + strlen(pszField));
@@ -316,6 +381,7 @@ int CSQLIniCheckMgr::Process(const char *pszRuleFile)
 
 		if (strstr(szLine, pszForce) == szLine) {
 			sscanf_s(szLine, "%*s%d", &bForce);
+			continue;
 		}
 
 		if (strstr(szLine, pszReplace) == szLine) {
@@ -324,6 +390,8 @@ int CSQLIniCheckMgr::Process(const char *pszRuleFile)
 			if (2 == sscanf_s(szLine, "%*s%s%s", szSrc,  _countof(szSrc), szDst,  _countof(szDst))) {
 				vecReplace.push_back(REPLACE_INFO(szSrc, szDst));
 			}
+
+			continue;
 		}
 
 		if (cFirst == '[') {

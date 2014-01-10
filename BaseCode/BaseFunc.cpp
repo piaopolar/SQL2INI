@@ -46,6 +46,40 @@ void FormatPath(std::string &strPath)
 	ReplaceStdString(strPath, "/", "\\");
 }
 
+void TrimCRLE(char *pszStr)
+{
+	if (NULL == pszStr) {
+		return;
+	}
+
+	//~~~~~~~~~~~~~~~~~~~~~~
+	int nLen = strlen(pszStr);
+	char *pLast;
+	//~~~~~~~~~~~~~~~~~~~~~~
+
+	for (pLast = pszStr + nLen - 1; pszStr >= pszStr; --pLast) {
+
+		//~~~~~~~~~~~~~~
+		bool bRid = false;
+		//~~~~~~~~~~~~~~
+
+		switch (*pLast) {
+		case '\n':
+		case '\r':
+			bRid = true;
+			break;
+		default:
+			break;
+		}
+
+		if (!bRid) {
+			break;
+		}
+	}
+
+	*(pLast + 1) = 0;
+}
+
 // ============================================================================
 // ==============================================================================
 void TrimRight(char *pszStr)
